@@ -69,21 +69,18 @@ with DAG(dag_id='load_api_aws_kinesis', default_args={'owner': 'Sovan'}, tags=["
         task_id = 'get_api_userId_params',
         python_callable = _set_api_user_id,
         op_args=["{{ var.value.get('api_user_id', -1) }}"],
-        provide_context=True
     ) 
     
     extract_userposts = PythonOperator(
         task_id = 'extract_userposts',
         python_callable = _extract_userposts,
         op_kwargs={"new_api_user_id": "{{ var.value.get('api_user_id', -1) }}"},
-        provide_context=True
     )
 
     write_userposts_to_stream = PythonOperator(
        task_id = 'write_userposts_to_stream',
        python_callable = _process_user_posts,
        op_kwargs={"new_api_user_id": "{{ var.value.get('api_user_id', -1) }}"},
-       provide_context=True
     )
 
     get_api_userId_params >> extract_userposts >>  write_userposts_to_stream
