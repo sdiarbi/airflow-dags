@@ -17,12 +17,19 @@ kinesis_client = boto3.client('kinesis')
 ## Setting up incremental user id for next call
 def _set_api_user_id(api_user_id, **context):
     try:
-        logger.info(f'type:: {type(api_user_id)} and api_user_id:: {api_user_id}')
-        if api_user_id == -1 or api_user_id == 10:
-            Variable.set(key="api_user_id", value=1)  
+        # Cast incoming template string to int
+        user_id_int = int(api_user_id)
+        logger.info(f'type:: {type(user_id_int)} and api_user_id:: {user_id_int}')
+        
+        if user_id_int == -1 or user_id_int >= 10:
+            next_val = 1
         else:
-            Variable.set(key="api_user_id", value=int(api_user_id)+1) 
-        return f"Latest api user id {int(Variable.get(key='api_user_id'))} sucessfully"
+            next_val = user_id_int + 1
+            
+        # Airflow 3.0 requires value to be str(next_val)
+        Variable.set(key="api_user_id", value=str(next_val))
+        
+        return f"Latest api user id {next_val} successfully set"
     except Exception as e:
         logger.info(f'ERROR WHILE SETTING UP userId param value:: {e}')
         raise Exception(f'ERROR WHILE SETTING UP userId param value:: {e}')
